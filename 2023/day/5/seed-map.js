@@ -16,10 +16,20 @@ const parseMap = function parseMap(mapText) {
 };
 
 const parseSeeds = function parseSeeds(seedsText) {
-    return seedsText
+    const seeds = [];
+
+    const seedRanges = seedsText
         .replace('seeds: ', '')
         .split(' ')
         .map((seed) => parseInt(seed, 10));
+
+    for (let i = 0; i < seedRanges.length - 1; i += 2) {
+        const rangeStart = seedRanges[i];
+        const rangeLength = seedRanges[i + 1];
+        seeds.push({ rangeStart, rangeLength });
+    }
+
+    return seeds;
 };
 
 const parse = function parse(input) {
@@ -45,23 +55,48 @@ const useMap = function useMap(map, key) {
     return range ? range[0] + (key - range[1]) : key;
 };
 
-const findLowestLocation = function findLowestLocation({ seeds, maps }) {
-    const seedToLocationMap = seeds.reduce(
-        (map, seed) => {
-            const soil = useMap(maps['seed-to-soil map'], seed);
-            const fertilizer = useMap(maps['soil-to-fertilizer map'], soil);
-            const water = useMap(maps['fertilizer-to-water map'], fertilizer);
-            const light = useMap(maps['water-to-light map'], water);
-            const temp = useMap(maps['light-to-temperature map'], light);
-            const humidity = useMap(maps['temperature-to-humidity map'], temp);
-            const location = useMap(maps['humidity-to-location map'], humidity);
-            map[seed] = location;
-            return map;
-        },
-        {},
-    );
+const useMapReverse = function useMapReverse(map, key) {
+    const range = map.find(([destStart, srcStart, length]) => (
+        key >= destStart && key <= destStart + length
+    ));
 
-    return Math.min(...Object.values(seedToLocationMap));
+    return range ? range[1] + (key - range[0]) : key;
+};
+
+const hasSeed = function hasSeed(maps, location, seeds) {
+    const humidity = useMapReverse(maps['humidity-to-location map'], location);
+    const temp = useMapReverse(maps['temperature-to-humidity map'], humidity);
+    const light = useMapReverse(maps['light-to-temperature map'], temp);
+    const water = useMapReverse(maps['water-to-light map'], light);
+    const fertilizer = useMapReverse(maps['fertilizer-to-water map'], water);
+    const soil = useMapReverse(maps['soil-to-fertilizer map'], fertilizer);
+    const seed = useMapReverse(maps['seed-to-soil map'], soil);
+
+    return seeds.some(({ rangeStart, rangeLength }) => (
+        seed >= rangeStart && seed <= rangeStart + rangeLength
+    ));
+};
+
+const findLowestLocation = function findLowestLocation({ seeds, maps }) {
+    let location;
+
+    const sortedLocations = maps['humidity-to-location map']
+        .sort((a, b) => a[0] - b[0]);
+
+    sortedLocations.find(([rangeStart, srcRangeStart, length]) => {
+        const rangeEnd = rangeStart + length;
+
+        for (let i = rangeStart; i < rangeEnd; ++i) {
+            if (hasSeed(maps, i, seeds)) {
+                location = i;
+                return true;
+            }
+        }
+
+        return false;
+    });
+
+    return location;
 };
 
 const input = readFileSync(resolve(join(__dirname, 'input')), 'utf-8');
