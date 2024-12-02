@@ -31,10 +31,9 @@ function countSafeReports(problemDampener = false): number {
     let safe = isSafe(report);
 
     if (!safe && problemDampener) {
-      const dampenedReports = report.map((_, index) => [
-        ...report.slice(0, index),
-        ...report.slice(index + 1),
-      ]);
+      const dampenedReports = report.map((_, index) =>
+        report.toSpliced(index, 1),
+      );
 
       safe = dampenedReports.some((dampenedReport) => isSafe(dampenedReport));
     }
