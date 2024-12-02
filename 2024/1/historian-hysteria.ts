@@ -1,9 +1,9 @@
 #!/usr/bin/env -S node -r ts-node/register
 
 import { readFileSync } from 'fs';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 
-const input = readFileSync(resolve(join(__dirname, 'input')), 'utf-8');
+const input = readFileSync(resolve(__dirname, 'input'), 'utf-8');
 
 const [list1, list2] = input
   .trim()
@@ -20,7 +20,7 @@ const [list1, list2] = input
     [[], []],
   );
 
-function getTotalDistance() {
+function getTotalDistance(): number {
   const [sorted1, sorted2] = [list1, list2].map((list) => [...list].sort());
 
   const distances = sorted1.map((location, index) =>
@@ -32,7 +32,7 @@ function getTotalDistance() {
 
 console.log(getTotalDistance());
 
-function getSimilarityScore() {
+function getSimilarityScore(): number {
   return list1.reduce(
     (score, location1) =>
       (score +=
