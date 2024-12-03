@@ -9,18 +9,16 @@ function addValidMuls(handleConditionals = false): number {
   let validMuls = [...input.matchAll(/mul\((\d{1,3}),(\d{1,3}\))/g)];
 
   if (handleConditionals) {
-    const conditionals = [...input.matchAll(/do\(\)|don't\(\)/g)].reverse();
+    const conditionals = input.matchAll(/do\(\)|don't\(\)/g);
     const doSections: [number, number][] = [];
     let startIndex = 0;
     let doSection = true;
 
-    while (conditionals.length) {
-      const conditional = conditionals.pop();
-
-      if (conditional && doSection && conditional[0] === "don't()") {
+    for (const conditional of conditionals) {
+      if (doSection && conditional[0] === "don't()") {
         doSections.push([startIndex, conditional.index]);
         doSection = false;
-      } else if (conditional && !doSection && conditional[0] === 'do()') {
+      } else if (!doSection && conditional[0] === 'do()') {
         startIndex = conditional.index;
         doSection = true;
       }
