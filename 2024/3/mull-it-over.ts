@@ -24,8 +24,8 @@ function addValidMuls(handleConditionals = false): number {
       }
     }
 
-    validMuls = validMuls.filter((mul) =>
-      doSections.some(([start, end]) => mul.index > start && mul.index < end),
+    validMuls = validMuls.filter(({ index }) =>
+      doSections.some(([start, end]) => index > start && index < end),
     );
   }
 
