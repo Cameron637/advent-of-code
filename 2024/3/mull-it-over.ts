@@ -30,7 +30,7 @@ function addValidMuls(handleConditionals = false): number {
   }
 
   return validMuls.reduce(
-    (sum, value) => (sum += parseInt(value[1], 10) * parseInt(value[2], 10)),
+    (sum, mul) => (sum += parseInt(mul[1], 10) * parseInt(mul[2], 10)),
     0,
   );
 }
