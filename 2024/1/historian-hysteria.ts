@@ -21,7 +21,7 @@ const [list1, list2] = input
   );
 
 function getTotalDistance(): number {
-  const [sorted1, sorted2] = [list1, list2].map((list) => [...list].sort());
+  const [sorted1, sorted2] = [list1, list2].map((list) => list.toSorted());
 
   const distances = sorted1.map((location, index) =>
     Math.abs(location - sorted2[index]),
