@@ -63,12 +63,8 @@ function xMasSearch(): number {
     for (let j = 1; j < grid[0].length - 1; j++) {
       if (
         grid[i][j] === 'A' &&
-        /MAS|SAM/.test(
-          `${grid[i - 1][j - 1]}${grid[i][j]}${grid[i + 1][j + 1]}`,
-        ) &&
-        /MAS|SAM/.test(
-          `${grid[i - 1][j + 1]}${grid[i][j]}${grid[i + 1][j - 1]}`,
-        )
+        /MAS|SAM/.test(`${grid[i - 1][j - 1]}A${grid[i + 1][j + 1]}`) &&
+        /MAS|SAM/.test(`${grid[i - 1][j + 1]}A${grid[i + 1][j - 1]}`)
       ) {
         count++;
       }
