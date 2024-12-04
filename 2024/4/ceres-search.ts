@@ -7,7 +7,7 @@ const input = readFileSync(resolve(__dirname, 'input'), 'utf-8');
 const rows = input.split('\n');
 const grid = rows.map((row) => row.split(''));
 
-function xmasSearch() {
+function xmasSearch(): number {
   const columns = rows.reduce(
     (columnBuilders, row) => {
       const characters = row.split('');
@@ -56,7 +56,7 @@ function xmasSearch() {
   );
 }
 
-function xMasSearch() {
+function xMasSearch(): number {
   let count = 0;
 
   for (let i = 1; i < rows.length - 1; i++) {
