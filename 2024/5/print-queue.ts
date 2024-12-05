@@ -11,30 +11,21 @@ const [rules, updateStrings] = input
 
 const updates = updateStrings.map((updateString) => updateString.split(','));
 
-function isCorrect(update: string[]): boolean {
-  return update.every((page, index) => {
-    const beforePages = rules
-      .filter((rule) => rule.endsWith(page))
-      .map((rule) => rule.split('|')[0]);
-
-    const afterPages = rules
-      .filter((rule) => rule.startsWith(page))
-      .map((rule) => rule.split('|')[1]);
-
-    return (
-      beforePages.every(
-        (beforePage) =>
-          !update.includes(beforePage) || update.indexOf(beforePage) < index,
-      ) &&
-      afterPages.every(
-        (afterPage) =>
-          !update.includes(afterPage) || update.indexOf(afterPage) > index,
-      )
+function correct(update: string[]): string[] {
+  return update.toSorted((a, b) => {
+    const applicableRule = rules.find(
+      (rule) => rule.includes(a) && rule.includes(b),
     );
+
+    return applicableRule
+      ? applicableRule.indexOf(a) - applicableRule.indexOf(b)
+      : 0;
   });
 }
 
-const correctUpdates = updates.filter((update) => isCorrect(update));
+const correctUpdates = updates.filter(
+  (update) => correct(update).join(',') === update.join(','),
+);
 
 function getMiddlePageSum(updatesList: string[][]): number {
   return updatesList.reduce(
@@ -45,18 +36,9 @@ function getMiddlePageSum(updatesList: string[][]): number {
 
 console.log(getMiddlePageSum(correctUpdates));
 
-const incorrectUpdates = updates.filter((update) => !isCorrect(update));
-
-const corrected = incorrectUpdates.map((update) =>
-  update.toSorted((a, b) => {
-    const applicableRule = rules.find(
-      (rule) => rule.includes(a) && rule.includes(b),
-    );
-
-    return applicableRule
-      ? applicableRule.indexOf(a) - applicableRule.indexOf(b)
-      : 0;
-  }),
+const incorrectUpdates = updates.filter(
+  (update) => correct(update).join(',') !== update.join(','),
 );
 
+const corrected = incorrectUpdates.map((update) => correct(update));
 console.log(getMiddlePageSum(corrected));
