@@ -5,6 +5,10 @@ import { resolve } from 'path';
 
 const input = readFileSync(resolve(__dirname, 'input'), 'utf-8');
 
+function replaceAt(value: string, index: number, replacement: string): string {
+  return `${value.substring(0, index)}${replacement}${value.substring(index + 1)}`;
+}
+
 function markGaurdPath(map: string): string {
   const pivots = new Set<string>();
   const lines = map.split('\n');
@@ -23,54 +27,54 @@ function markGaurdPath(map: string): string {
 
     if (guard === '^') {
       while (x > 0 && lines[x - 1].charAt(y) !== '#') {
-        lines[x] = `${lines[x].slice(0, y)}X${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'X');
         x--;
       }
 
       if (x > 0) {
-        lines[x] = `${lines[x].slice(0, y)}>${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, '>');
         guard = '>';
       } else {
-        lines[x] = `${lines[x].slice(0, y)}X${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'X');
         guard = '';
       }
     } else if (guard === '>') {
       while (y < width - 1 && lines[x].charAt(y + 1) !== '#') {
-        lines[x] = `${lines[x].slice(0, y)}X${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'X');
         y++;
       }
 
       if (y < width - 1) {
-        lines[x] = `${lines[x].slice(0, y)}V${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'V');
         guard = 'V';
       } else {
-        lines[x] = `${lines[x].slice(0, y)}X${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'X');
         guard = '';
       }
     } else if (guard === 'V') {
       while (x < length - 1 && lines[x + 1].charAt(y) !== '#') {
-        lines[x] = `${lines[x].slice(0, y)}X${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'X');
         x++;
       }
 
       if (x < length - 1) {
-        lines[x] = `${lines[x].slice(0, y)}<${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, '<');
         guard = '<';
       } else {
-        lines[x] = `${lines[x].slice(0, y)}X${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'X');
         guard = '';
       }
     } else if (guard === '<') {
       while (y > 0 && lines[x].charAt(y - 1) !== '#') {
-        lines[x] = `${lines[x].slice(0, y)}X${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'X');
         y--;
       }
 
       if (y > 0) {
-        lines[x] = `${lines[x].slice(0, y)}^${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, '^');
         guard = '^';
       } else {
-        lines[x] = `${lines[x].slice(0, y)}X${lines[x].slice(y + 1)}`;
+        lines[x] = replaceAt(lines[x], y, 'X');
         guard = '';
       }
     }
@@ -92,7 +96,7 @@ const obstructions = positions.filter(({ index }) => {
   }
 
   try {
-    markGaurdPath(`${input.slice(0, index)}#${input.slice(index + 1)}`);
+    markGaurdPath(replaceAt(input, index, '#'));
   } catch (error) {
     if (error instanceof Error && error.message === 'Stuck in a loop') {
       return true;
