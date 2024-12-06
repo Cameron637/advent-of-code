@@ -101,7 +101,7 @@ const obstructions = positions.filter(({ index }) => {
     if (error instanceof Error && error.message === 'Stuck in a loop') {
       return true;
     } else {
-      console.error(error);
+      throw error;
     }
   }
 
