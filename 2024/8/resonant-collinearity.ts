@@ -2,22 +2,11 @@
 
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { type Coordinate, toCoordinate, toIndex } from '../../util/util';
 
 const input = readFileSync(resolve(__dirname, 'input'), 'utf-8');
 const rows = input.split('\n');
 const columns = rows[0].length;
-
-type Coordinate = [number, number];
-
-function toCoordinate(index: number): Coordinate {
-  const row = Math.floor(index / columns);
-  const col = index % columns;
-  return [row, col];
-}
-
-function toIndex([row, col]: Coordinate): number {
-  return row * columns + col;
-}
 
 function markAntinode(map: string, index: number): string {
   return `${map.substring(0, index)}#${map.substring(index + 1)}`;
@@ -45,7 +34,7 @@ function countAntinodes(harmonics = false): number {
     resonatingAntennas.forEach((resonating) => {
       const [first, second] = [antenna.index, resonating.index]
         .toSorted((a, b) => a - b)
-        .map((index) => toCoordinate(index));
+        .map((index) => toCoordinate(columns, index));
 
       const rowDistance = second[0] - first[0];
       const colDistance = Math.abs(second[1] - first[1]);
@@ -69,7 +58,7 @@ function countAntinodes(harmonics = false): number {
               : firstCoord[1] + colDistance,
           ];
 
-          antinodeMap = markAntinode(antinodeMap, toIndex(antinode));
+          antinodeMap = markAntinode(antinodeMap, toIndex(columns, antinode));
           firstCoord = antinode;
         }
 
@@ -86,7 +75,7 @@ function countAntinodes(harmonics = false): number {
               : secondCoord[1] - colDistance,
           ];
 
-          antinodeMap = markAntinode(antinodeMap, toIndex(antinode));
+          antinodeMap = markAntinode(antinodeMap, toIndex(columns, antinode));
           secondCoord = antinode;
         }
       } else {
@@ -111,7 +100,7 @@ function countAntinodes(harmonics = false): number {
             antinode[1] >= 0 &&
             antinode[1] < columns
           ) {
-            antinodeMap = markAntinode(antinodeMap, toIndex(antinode));
+            antinodeMap = markAntinode(antinodeMap, toIndex(columns, antinode));
           }
         });
       }
