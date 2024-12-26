@@ -6,9 +6,9 @@ import { resolve } from 'path';
 const registerIds = ['A', 'B', 'C'] as const;
 type RegisterId = (typeof registerIds)[number];
 
-function getRegisterValue(input: string, id: RegisterId): number {
+function getRegisterValue(input: string, id: RegisterId): bigint {
   const match = new RegExp(`Register\\s+${id}:\\s+(\\d+)`).exec(input);
-  return match ? parseInt(match[1], 10) : 0;
+  return match ? BigInt(match[1]) : 0n;
 }
 
 function getProgram(input: string): string {
@@ -32,7 +32,7 @@ function getInstructions(program: string): Instruction[] {
 }
 
 interface Program {
-  registers: Record<RegisterId, number>;
+  registers: Record<RegisterId, bigint>;
   instructions: Instruction[];
 }
 
@@ -42,7 +42,7 @@ function run(program: Program): string {
   let index = 0;
   let jumped = false;
 
-  function getCombo(operand: number): number {
+  function getCombo(operand: number): bigint {
     if (operand === 4) {
       return registers.A;
     } else if (operand === 5) {
@@ -51,11 +51,11 @@ function run(program: Program): string {
       return registers.C;
     }
 
-    return operand;
+    return BigInt(operand);
   }
 
-  function getDivision(operand: number): number {
-    return Math.floor(registers.A / 2 ** getCombo(operand));
+  function getDivision(operand: number): bigint {
+    return registers.A / 2n ** getCombo(operand);
   }
 
   type Operation = (operand: number) => void;
@@ -65,13 +65,13 @@ function run(program: Program): string {
       registers.A = getDivision(operand);
     },
     1: (operand) => {
-      registers.B = registers.B ^ operand;
+      registers.B = registers.B ^ BigInt(operand);
     },
     2: (operand) => {
-      registers.B = getCombo(operand) % 8;
+      registers.B = getCombo(operand) % 8n;
     },
     3: (operand) => {
-      if (registers.A !== 0) {
+      if (registers.A !== 0n) {
         index = Math.floor(operand / 2);
         jumped = true;
       }
@@ -80,7 +80,7 @@ function run(program: Program): string {
       registers.B = registers.B ^ registers.C;
     },
     5: (operand) => {
-      output.push(getCombo(operand) % 8);
+      output.push(Number(getCombo(operand) % 8n));
     },
     6: (operand) => {
       registers.B = getDivision(operand);
@@ -112,22 +112,41 @@ const registers = registerIds.reduce(
     return record;
   },
   {
-    A: 0,
-    B: 0,
-    C: 0,
+    A: 0n,
+    B: 0n,
+    C: 0n,
   },
 );
 
 const programString = getProgram(input);
 const instructions: Instruction[] = getInstructions(programString);
 const program = { registers, instructions };
-let output = run(program);
+const output = run(program);
 console.log(output);
-let A = 0;
+let min: number | bigint = Number.POSITIVE_INFINITY;
+let possible = [0n];
 
-while (output !== programString) {
-  A++;
-  output = run({ ...program, registers: { ...registers, A } });
+while (possible.length) {
+  const newPossible: bigint[] = [];
+
+  possible.forEach((value) => {
+    for (let i = 0n; i < 8n; i++) {
+      const A = (value << 3n) | i;
+
+      const newOutput = run({
+        ...program,
+        registers: { ...program.registers, A },
+      });
+
+      if (programString === newOutput) {
+        min = A < min ? A : min;
+      } else if (programString.endsWith(newOutput)) {
+        newPossible.push(A);
+      }
+    }
+  });
+
+  possible = newPossible;
 }
 
-console.log(A);
+console.log(min);
