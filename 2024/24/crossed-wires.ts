@@ -62,16 +62,18 @@ interface GateParams {
 
 class Gate extends EventEmitter {
   inputs: [string, string];
+  logic: Logic;
   output: string;
   value?: boolean;
-  private logic: LogicFn;
+  private logicFn: LogicFn;
   private map: WireMap;
 
   constructor({ inputs, output, logic, map }: GateParams) {
     super();
     this.inputs = inputs;
     this.output = output;
-    this.logic = logicFunctions[logic];
+    this.logic = logic;
+    this.logicFn = logicFunctions[logic];
     this.map = map;
 
     this.map.emitter.on('input', (wire) => {
@@ -87,7 +89,7 @@ class Gate extends EventEmitter {
   run(): void {
     this.map.set(
       this.output,
-      this.logic(
+      this.logicFn(
         this.map.get(this.inputs[0]) ?? false,
         this.map.get(this.inputs[1]) ?? false,
       ),
@@ -143,45 +145,6 @@ class System {
 
     return parseInt(bits, 2);
   }
-
-  getSwapKey(swapped: [Gate, Gate][]): string {
-    return swapped
-      .flatMap((gates) => gates.map(({ output }) => output))
-      .toSorted()
-      .join(',');
-  }
-
-  swapRandom(pairs: number, tried: Set<string>): [Gate, Gate][] {
-    let swapped: [Gate, Gate][] = [];
-    let swapKey = '';
-
-    while (!swapKey || tried.has(swapKey)) {
-      swapped = [];
-
-      for (let i = 0; i < pairs; i++) {
-        const random1 = this.getRandomGate(swapped.flat());
-        const random2 = this.getRandomGate([...swapped.flat(), random1]);
-        const output1 = random1.output;
-        random1.output = random2.output;
-        random2.output = output1;
-        swapped.push([random1, random2]);
-      }
-
-      swapKey = this.getSwapKey(swapped);
-    }
-
-    return swapped;
-  }
-
-  private getRandomGate(selected: Gate[]): Gate {
-    let random = this.gates[Math.floor(Math.random() * this.gates.length)];
-
-    while (selected.includes(random)) {
-      random = this.gates[Math.floor(Math.random() * this.gates.length)];
-    }
-
-    return random;
-  }
 }
 
 function getOutput(input: string): number {
@@ -191,19 +154,63 @@ function getOutput(input: string): number {
 }
 
 function getCrossedWires(input: string): string {
-  const tried = new Set<string>();
-  let system = new System(input);
-  let swapped = system.swapRandom(4, tried);
-  system.run();
+  const crossedWires = new Set<string>();
+  const system = new System(input);
 
-  while (system.getValue('x') + system.getValue('y') !== system.getValue('z')) {
-    tried.add(system.getSwapKey(swapped));
-    system = new System(input);
-    swapped = system.swapRandom(4, tried);
-    system.run();
-  }
+  const inputGates = system.gates.filter(
+    (gate) =>
+      (gate.inputs[0].startsWith('x') && gate.inputs[1].startsWith('y')) ||
+      (gate.inputs[0].startsWith('y') && gate.inputs[1].startsWith('x')),
+  );
 
-  return system.getSwapKey(swapped);
+  inputGates.forEach((gate) => {
+    const bit = gate.inputs[0].slice(1);
+
+    if (bit === '00' && gate.logic === 'XOR' && gate.output !== 'z00') {
+      crossedWires.add(gate.output);
+      crossedWires.add('z00');
+    } else if (
+      (bit !== '00' || gate.logic === 'AND') &&
+      gate.output.startsWith('z')
+    ) {
+      crossedWires.add(gate.output);
+    }
+  });
+
+  system.gates
+    .filter((gate) => gate.output.startsWith('z') && gate.output !== 'z45')
+    .forEach((gate) => {
+      if (gate.logic !== 'XOR') {
+        crossedWires.add(gate.output);
+      }
+    });
+
+  inputGates
+    .filter((gate) => gate.inputs[0].slice(1) !== '00' && gate.logic === 'XOR')
+    .forEach((gate) => {
+      const carry = system.gates.find(
+        (carryGate) =>
+          carryGate.logic === 'XOR' && carryGate.inputs.includes(gate.output),
+      );
+
+      if (!carry) {
+        crossedWires.add(gate.output);
+      } else if (!carry.output.startsWith('z')) {
+        crossedWires.add(carry.output);
+      }
+    });
+
+  const orGates = system.gates.filter((gate) => gate.logic === 'OR');
+
+  system.gates
+    .filter((gate) => gate.inputs[0].slice(1) !== '00' && gate.logic === 'AND')
+    .forEach((gate) => {
+      if (!orGates.some((orGate) => orGate.inputs.includes(gate.output))) {
+        crossedWires.add(gate.output);
+      }
+    });
+
+  return [...crossedWires].toSorted().join(',');
 }
 
 const input = readFileSync(resolve(__dirname, 'input'), 'utf-8');
