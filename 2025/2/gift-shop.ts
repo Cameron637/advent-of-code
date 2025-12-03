@@ -24,7 +24,7 @@ function isRepeatedSequence(s: string): boolean {
 type Range = [number, number];
 
 function getInvalidSum([start, end]: Range): number {
-  const invalidIds = [];
+  const invalidIds: number[] = [];
 
   for (const i of range(start, end + 1)) {
     const id = `${i}`;
@@ -41,7 +41,7 @@ function getInvalidSum([start, end]: Range): number {
 }
 
 function getInvalidSum2([start, end]: Range): number {
-  const invalidIds = [];
+  const invalidIds: number[] = [];
 
   for (const i of range(start, end + 1)) {
     if (isRepeatedSequence(`${i}`)) {
