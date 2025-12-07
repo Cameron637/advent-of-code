@@ -81,6 +81,7 @@ function countTimelines(manifold: string[][]): number {
   const startCol = manifold[0].indexOf('S');
   return countPaths(0, startCol);
 }
+
 const input = readFileSync(resolve(__dirname, 'input'), 'utf-8').trim();
 const manifold = getManifold(input);
 console.log(countBeamSplits(manifold));
