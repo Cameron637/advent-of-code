@@ -26,5 +26,10 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.0"
+  },
+  "dependencies": {
+    "graphology": "^0.26.0",
+    "graphology-simple-path": "^0.2.0",
+    "z3-solver": "^4.15.4"
   }
 }
